@@ -3,342 +3,241 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>landing</title>
+<title>Yichen Lin</title>
+<meta name="description" content="Yichen Lin: accounting, data, and the tools I build.">
+<meta name="theme-color" content="#050b1a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink: #211D17;
-    --ink-2: #29241C;
-    --paper: #EDE6D6;
-    --paper-2: #E3D9BF;
-    --brass: #B8873D;
-    --brass-bright: #D6A554;
-    --rust: #9C4A36;
-    --text: #EDE6D6;
-    --text-dim: #9C9484;
-    --card-text: #2B2013;
-    --card-text-dim: #6B5F49;
-    --line: #40392E;
+    --bg:#050b1a;
+    --bg-2:#0a1730;
+    --panel:#0d1f40;
+    --line:#1a3463;
+    --deep:#13315c;
+    --mid:#1f4e8c;
+    --blue:#2e7bd6;
+    --sky:#5aa9ff;
+    --ice:#a9d3ff;
+    --text:#ffffff;
+    --dim:#ffffff;
+    --mono:'JetBrains Mono', ui-monospace, Menlo, monospace;
+    --sans:'Space Grotesk', -apple-system, 'Segoe UI', sans-serif;
   }
-  *{ box-sizing: border-box; }
-  html{ scroll-behavior: smooth; }
-  body{
-    margin:0;
-    background: var(--ink);
-    color: var(--text);
-    font-family: 'Inter', -apple-system, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    min-height: 100vh;
-  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;transition:background .3s,color .3s}
+  a{color:inherit}
+  ::selection{background:var(--sky);color:var(--bg)}
 
-  /* faint grid texture, like a drafting board */
-  body::before{
-    content:'';
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 0;
-    background-image:
-      linear-gradient(var(--line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--line) 1px, transparent 1px);
-    background-size: 42px 42px;
-    opacity: 0.18;
-    mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, black 20%, transparent 75%);
-  }
+  /* ---------- header ---------- */
+  header{position:fixed;inset:0 0 auto 0;z-index:20;display:flex;align-items:center;justify-content:flex-end;gap:16px;padding:18px clamp(16px,4vw,40px);font:500 13px var(--mono);letter-spacing:.04em;mix-blend-mode:normal;background:var(--bg);border-bottom:1px solid var(--line)}
+  nav{display:flex;gap:clamp(12px,3vw,28px);align-items:center}
+  nav a{text-decoration:none;color:var(--dim);transition:color .2s}
+  nav a:hover{color:var(--sky)}
+  @media (max-width:560px){nav a.hide-s{display:none}}
 
-  .wrap{
-    position: relative;
-    z-index: 1;
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 96px 28px 80px;
-  }
+  /* ---------- hero ---------- */
+  .hero{position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,11,26,.72) 0%,rgba(5,11,26,.5) 55%,rgba(5,11,26,.6) 100%);pointer-events:none}
+  .hero-content{position:relative;z-index:2;width:100%;max-width:1180px;margin:0 auto;padding:104px clamp(16px,4vw,40px) 32px}
+  .hero-content .about-grid{animation:heroIn 1s cubic-bezier(.2,.7,.2,1) .2s both}
+  @keyframes heroIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+  @media (max-width:760px){.hero::after{background:rgba(5,11,26,.85)}}
+  @media (prefers-reduced-motion:reduce){.hero-content .about-grid{animation:none}}
+  #wave{position:absolute;inset:0;width:100%;height:100%;display:block;-webkit-mask-image:linear-gradient(#000 75%,transparent);mask-image:linear-gradient(#000 75%,transparent)}
 
-  .eyebrow{
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12.5px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--brass-bright);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 22px;
-  }
-  .eyebrow::before{
-    content:'';
-    width: 22px; height: 1px;
-    background: var(--brass);
-  }
+  /* ---------- sections ---------- */
+  section{padding:32px clamp(16px,4vw,40px) 72px;max-width:1180px;margin:0 auto}
+  .label{display:flex;align-items:center;gap:12px;font:500 12px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--text);margin-bottom:12px}
+  .label::after{content:"";flex:1;height:1px;background:var(--line)}
+  .about-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:clamp(24px,5vw,72px)}
+  @media (max-width:820px){.about-grid{grid-template-columns:1fr}}
+  .about-grid p.big{font:400 clamp(22px,2.6vw,32px)/1.35 var(--sans);margin:0;letter-spacing:-.01em}
+  .about-grid p.big span{color:var(--sky)}
+  .about-grid p.body{font:400 17px/1.65 var(--sans);color:var(--ice);margin:22px 0 0;max-width:58ch}
+  .facts{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+  .facts li{display:flex;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);font:400 14px var(--mono)}
+  .facts li span:first-child{color:var(--dim)}
+  .facts li span:last-child{text-align:right}
 
-  h1{
-    font-family: 'Fraunces', serif;
-    font-optical-sizing: auto;
-    font-weight: 500;
-    font-size: clamp(40px, 7vw, 64px);
-    line-height: 1.04;
-    letter-spacing: -0.01em;
-    margin: 0 0 22px 0;
-    color: var(--paper);
-  }
-  h1 em{
-    font-style: italic;
-    font-weight: 400;
-    color: var(--brass-bright);
-  }
+  /* ---------- work ---------- */
+  .work{list-style:none;margin:0;padding:0}
+  .work li{border-bottom:1px solid var(--line)}
+  .work a.row{display:grid;grid-template-columns:110px 1fr auto;gap:24px;align-items:center;padding:24px 4px;text-decoration:none;position:relative;transition:padding .3s}
+  .work a.row::before{content:"";position:absolute;inset:0;background:var(--bg-2);transform:scaleY(0);transform-origin:bottom;transition:transform .35s cubic-bezier(.2,.7,.2,1);z-index:-1}
+  .work a.row:hover::before,.work a.row:focus-visible::before{transform:scaleY(1)}
+  .work a.row:hover{padding-left:16px}
+  .num{font:500 12px var(--mono);color:var(--text);letter-spacing:.06em}
+  .work h3{font:600 clamp(24px,3.4vw,40px)/1.1 var(--sans);margin:0 0 8px;letter-spacing:-.02em}
+  .work p{margin:0;color:var(--dim);max-width:60ch;font-size:15px;line-height:1.55}
+  .go{font:500 13px var(--mono);color:var(--text);white-space:nowrap}
+  .go i{display:inline-block;font-style:normal;transition:transform .25s}
+  .work a.row:hover .go i{transform:translateX(6px)}
+  @media (max-width:700px){.work a.row{grid-template-columns:1fr;gap:10px}.go{justify-self:start}}
 
-  .lede{
-    font-size: 17px;
-    line-height: 1.65;
-    color: var(--text-dim);
-    max-width: 46ch;
-    margin: 0 0 56px 0;
-  }
-  .lede strong{ color: var(--text); font-weight: 500; }
+  /* ---------- footer ---------- */
+  footer{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:24px clamp(16px,4vw,40px) 32px;max-width:1180px;margin:0 auto;font:400 12px var(--mono);color:var(--dim);border-top:1px solid var(--line)}
 
-  .rule{
-    border: none;
-    border-top: 1px solid var(--line);
-    margin: 0 0 56px 0;
-  }
-
-  .log-heading{
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11.5px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 30px;
-  }
-
-  .entries{
-    display: flex;
-    flex-direction: column;
-    gap: 46px;
-  }
-
-  .entry{
-    opacity: 0;
-    transform: translateY(14px);
-    animation: rise 0.7s cubic-bezier(.22,.7,.3,1) forwards;
-  }
-  .entry:nth-child(1){ animation-delay: .05s; }
-  .entry:nth-child(2){ animation-delay: .16s; }
-  .entry:nth-child(3){ animation-delay: .27s; }
-  @keyframes rise{ to{ opacity:1; transform: translateY(0); } }
-
-  .entry-meta{
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    letter-spacing: 0.06em;
-    color: var(--text-dim);
-    padding: 0 4px 10px 2px;
-  }
-  .entry-meta .num{ color: var(--brass-bright); }
-
-  .card{
-    position: relative;
-    background: var(--paper);
-    color: var(--card-text);
-    border-radius: 3px;
-    padding: 30px 32px 26px;
-    box-shadow: 0 1px 2px rgba(0,0,0,.35), 0 14px 30px -14px rgba(0,0,0,.55);
-    transform: rotate(-0.6deg);
-    transition: transform .35s cubic-bezier(.22,.8,.3,1), box-shadow .35s ease;
-  }
-  .card:hover{
-    transform: rotate(0deg) translateY(-3px);
-    box-shadow: 0 2px 4px rgba(0,0,0,.4), 0 22px 40px -16px rgba(0,0,0,.6);
-  }
-
-  .pin{
-    position: absolute;
-    top: -11px;
-    right: 26px;
-    filter: drop-shadow(0 3px 3px rgba(0,0,0,.4));
-  }
-
-  .card h2{
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-    font-size: 25px;
-    margin: 2px 0 10px 0;
-    letter-spacing: -0.01em;
-  }
-  .card p{
-    font-size: 14.5px;
-    line-height: 1.6;
-    color: var(--card-text-dim);
-    margin: 0 0 20px 0;
-    max-width: 46ch;
-  }
-
-  .tags{
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin-bottom: 22px;
-  }
-  .tag{
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10.5px;
-    letter-spacing: 0.04em;
-    color: var(--rust);
-    border: 1px solid #C9BB98;
-    background: #E6DCC2;
-    padding: 4px 9px;
-    border-radius: 999px;
-  }
-
-  .launch{
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    font-weight: 500;
-    letter-spacing: 0.02em;
-    color: var(--card-text);
-    text-decoration: none;
-    padding-bottom: 2px;
-    border-bottom: 1.5px solid var(--rust);
-    transition: gap .2s ease, color .2s ease;
-  }
-  .launch:hover{ gap: 11px; color: var(--rust); }
-
-  .entry.placeholder .card{
-    background: transparent;
-    border: 1.5px dashed var(--line);
-    box-shadow: none;
-    transform: rotate(0.5deg);
-    color: var(--text-dim);
-  }
-  .entry.placeholder .card:hover{ transform: rotate(0.5deg); box-shadow: none; }
-  .entry.placeholder h2{ color: var(--text-dim); font-weight: 500; }
-  .entry.placeholder p{ color: var(--text-dim); opacity: .7; margin-bottom: 0; }
-  .entry.placeholder .pin{ opacity: .35; }
-
-  footer{
-    margin-top: 80px;
-    padding-top: 26px;
-    border-top: 1px solid var(--line);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11.5px;
-    color: var(--text-dim);
-    letter-spacing: 0.03em;
-  }
-
-  @media (max-width: 520px){
-    .wrap{ padding: 64px 20px 60px; }
-    .card{ padding: 24px 22px 22px; }
-  }
-
-  @media (prefers-reduced-motion: reduce){
-    .entry{ animation: none; opacity: 1; transform: none; }
-    .card{ transition: none; }
-    html{ scroll-behavior: auto; }
-  }
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform .8s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.reveal{opacity:1;transform:none;transition:none}}
 </style>
 </head>
 <body>
 
-<div class="wrap">
+<header>
+  <nav>
+    <a href="#work">Projects</a>
+    <a href="https://www.linkedin.com/in/yichen-lin1" target="_blank" rel="noopener">LinkedIn</a>
+    <a href="resume.pdf" target="_blank" rel="noopener">Resume</a>
+    <a href="mailto:yichenlin79@gmail.com">Contact</a>
+  </nav>
+</header>
 
-  <div class="eyebrow">A build log</div>
-  <h1>work in progress</h1>
-  <p class="lede">
-    A running record of tools I&rsquo;ve built, each one <strong>live and usable</strong>,
-    not just written up. New entries get pinned here as they ship.
-  </p>
-
-  <hr class="rule">
-
-  <div class="log-heading">Entries — newest first</div>
-
-  <div class="entries">
-
-    <!--
-      TO ADD A NEW PROJECT: copy everything from the next <div class="entry">
-      down to its closing </div> (just above the ".entry placeholder" block),
-      paste it above the placeholder entry, and edit: the entry number/date,
-      the tag on the right, the title, description, tags, and the href on
-      the Launch link (point it at that project's HTML file).
-    -->
-    <div class="entry">
-      <div class="entry-meta">
-        <span><span class="num">Entry 02</span> · Oct 2026</span>
-        <span>Audit tool</span>
-      </div>
-      <div class="card">
-        <svg class="pin" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="10" cy="8" r="6" fill="#B8873D"/>
-          <circle cx="10" cy="8" r="6" stroke="#7A5A25" stroke-width="1"/>
-          <rect x="9" y="13" width="2" height="6" rx="1" fill="#7A5A25"/>
-          <ellipse cx="8" cy="6" rx="1.8" ry="1.2" fill="#E6C98A" opacity="0.7"/>
-        </svg>
-        <h2>Duplicate Invoice Detector</h2>
-        <p>Upload a CSV of invoices and it flags likely duplicate payments &mdash; same
-          vendor, same amount, and invoice numbers that match once typos and formatting
-          are cleaned out &mdash; with the reason behind every flag.</p>
-        <div class="tags">
-          <span class="tag">fuzzy matching</span>
-          <span class="tag">accounts payable</span>
-          <span class="tag">internal controls</span>
+<main id="top">
+  <div class="hero">
+    <canvas id="wave" aria-hidden="true"></canvas>
+    <div class="hero-content" id="about">
+    <div class="about-grid">
+        <div>
+          <p class="big">Hello World :D! My name is Yichen Lin, a CPA-eligible MBA in Accounting candidate at Stony Brook with a background in applied math and statistics</p>
+          <p class="body">At a New York law firm, I reviewed about 200 invoices a week against internal controls and caught a recurring issue causing duplicate payments, then helped fix the process. As a restaurant general manager, I analyzed sales and margins to recommend a menu change that raised gross profit by 6%. I like finding where the numbers don&rsquo;t line up and figuring out why, and building small tools, like the ones below, that make that easier.</p>
         </div>
-        <a class="launch" href="invoice-detector.html">Launch <span>&rarr;</span></a>
+        <ul class="facts">
+          <li><span>Education</span><span>MBA in Accounting, 2027<br>B.S. Applied Math &amp; Statistics<br>B.A. Economics</span></li>
+          <li><span>Focus</span><span>Accounting, Data Analysis</span></li>
+          <li><span>Tools</span><span>Excel, SQL, Python, R, Power BI, Access</span></li>
+          <li><span>Languages</span><span>English, Mandarin</span></li>
+        </ul>
       </div>
     </div>
-
-    <div class="entry">
-      <div class="entry-meta">
-        <span><span class="num">Entry 01</span> · Aug 2026</span>
-        <span>Canvas tool</span>
-      </div>
-      <div class="card">
-        <svg class="pin" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="10" cy="8" r="6" fill="#B8873D"/>
-          <circle cx="10" cy="8" r="6" stroke="#7A5A25" stroke-width="1"/>
-          <rect x="9" y="13" width="2" height="6" rx="1" fill="#7A5A25"/>
-          <ellipse cx="8" cy="6" rx="1.8" ry="1.2" fill="#E6C98A" opacity="0.7"/>
-        </svg>
-        <h2>Mindmap</h2>
-        <p>A freeform idea-mapping canvas — draggable boxes, curved connectors that
-          route around each other, freehand drawing with a highlighter and eraser,
-          pan &amp; zoom, and autosave that follows you across machines.</p>
-        <div class="tags">
-          <span class="tag">canvas</span>
-          <span class="tag">drawing</span>
-          <span class="tag">autosave</span>
-        </div>
-        <a class="launch" href="mindmap.html">Launch <span>&rarr;</span></a>
-      </div>
-    </div>
-
-    <div class="entry placeholder">
-      <div class="entry-meta">
-        <span><span class="num">Entry 03</span> · —</span>
-        <span>In progress</span>
-      </div>
-      <div class="card">
-        <svg class="pin" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="10" cy="8" r="6" fill="#40392E"/>
-          <rect x="9" y="13" width="2" height="6" rx="1" fill="#40392E"/>
-        </svg>
-        <h2>Next tool</h2>
-        <p>Not started yet — this spot is reserved for whatever gets built next.</p>
-      </div>
-    </div>
-
   </div>
 
-  <footer>too broke to afford a trademark LOL</footer>
 
-</div>
+  <section id="work">
+    <div class="label">Projects</div>
+    <ul class="work">
+      <li class="reveal">
+        <a class="row" href="mindmap.html">
+          <span class="num">Entry #001</span>
+          <div>
+            <h3>Mindmap</h3>
+            <p>A freeform idea-mapping canvas: draggable boxes, curved connectors that route around each other, freehand drawing with a highlighter and eraser, pan &amp; zoom, and autosave across machines.</p>
+          </div>
+          <span class="go">Launch <i>&rarr;</i></span>
+        </a>
+      </li>
+      <li class="reveal">
+        <a class="row" href="invoice-detector.html">
+          <span class="num">Entry #002</span>
+          <div>
+            <h3>Duplicate Invoice Detector</h3>
+            <p>Upload a CSV of invoices and it flags likely duplicate payments: same vendor, same amount, and invoice numbers that match once typos and formatting are cleaned out, with the reason behind every flag.</p>
+          </div>
+          <span class="go">Launch <i>&rarr;</i></span>
+        </a>
+      </li>
+      <li class="reveal">
+        <a class="row" href="sales-database.html">
+          <span class="num">Entry #003</span>
+          <div>
+            <h3>Sales &amp; Cash Receipts Database</h3>
+            <p>A Microsoft Access database and chain of queries that turns orders and customer payments into billings, cash collected, and receivable balances by customer.</p>
+          </div>
+          <span class="go">Open <i>&rarr;</i></span>
+        </a>
+      </li>
+    </ul>
+  </section>
 
+</main>
+
+<footer>
+  <span>&copy; 2026 Yichen Lin. All rights reserved.</span>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  const root = document.documentElement;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const css = v => getComputedStyle(root).getPropertyValue(v).trim();
+
+  // ---------- wave field ----------
+  const cv = document.getElementById("wave"), ctx = cv.getContext("2d");
+  const GLYPHS = [" ", "·", ":", "-", "=", "~", "+", "0", "1"];
+  let W, H, cell, cols, rows, dpr;
+  const mouse = { x: -9999, y: -9999, tx: -9999, ty: -9999 };
+  const ripples = [];
+
+  function resize(){
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = cv.clientWidth; H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cell = W < 600 ? 9 : 14;
+    cols = Math.ceil(W / cell); rows = Math.ceil(H / cell);
+    ctx.font = `500 ${cell - 1}px "JetBrains Mono", monospace`;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+  }
+
+  function frame(t){
+    t *= 0.001;
+    mouse.x += (mouse.tx - mouse.x) * 0.12;
+    mouse.y += (mouse.ty - mouse.y) * 0.12;
+    const bg = css("--bg"), pal = [css("--deep"), css("--mid"), css("--blue"), css("--sky"), css("--ice")];
+    ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+    for (let i = ripples.length - 1; i >= 0; i--) if (t - ripples[i].t > 3) ripples.splice(i, 1);
+
+    for (let r = 0; r < rows; r++){
+      const y = r * cell + cell / 2;
+      for (let c = 0; c < cols; c++){
+        const x = c * cell + cell / 2;
+        // layered travelling waves, like a swell rolling across the screen
+        let h = Math.sin(c * 0.11 + t * 1.1 + Math.sin(r * 0.07 + t * 0.4) * 1.6) * 0.5
+              + Math.sin(r * 0.17 - t * 0.8 + c * 0.03) * 0.3
+              + Math.sin((c + r) * 0.05 + t * 0.6) * 0.2;
+        // cursor bends the field
+        const dx = x - mouse.x, dy = y - mouse.y, dist = Math.sqrt(dx * dx + dy * dy);
+        h += Math.exp(-dist / 140) * Math.sin(dist * 0.06 - t * 6) * 0.9;
+        // click ripples
+        for (const rp of ripples){
+          const age = t - rp.t, rd = Math.hypot(x - rp.x, y - rp.y), front = age * 420;
+          h += Math.exp(-Math.abs(rd - front) / 30) * (1 - age / 3) * 1.4;
+        }
+        const n = (h + 1.2) / 2.4; // 0..1
+        const gi = Math.max(0, Math.min(GLYPHS.length - 1, Math.floor(n * GLYPHS.length)));
+        if (gi === 0) continue;
+        ctx.fillStyle = pal[Math.max(0, Math.min(4, Math.floor(n * 5)))];
+        ctx.globalAlpha = 0.45 + n * 0.55;
+        ctx.fillText(GLYPHS[gi], x, y);
+        ctx.globalAlpha = 1;
+      }
+    }
+    if (!reduce) requestAnimationFrame(frame);
+  }
+
+  addEventListener("pointermove", e => {
+    const b = cv.getBoundingClientRect();
+    mouse.tx = e.clientX - b.left; mouse.ty = e.clientY - b.top;
+  });
+  addEventListener("pointerleave", () => { mouse.tx = mouse.ty = -9999; });
+  cv.parentElement.addEventListener("pointerdown", e => {
+    const b = cv.getBoundingClientRect();
+    ripples.push({ x: e.clientX - b.left, y: e.clientY - b.top, t: performance.now() * 0.001 });
+  });
+  new ResizeObserver(() => { if (W !== undefined){ resize(); if (reduce) frame(0); } }).observe(cv);
+
+  // ---------- reveal on scroll ----------
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: 0.15 });
+  document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+
+  const start = () => { resize(); reduce ? frame(0) : requestAnimationFrame(frame); };
+  (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(start);
+})();
+</script>
 </body>
 </html>
