@@ -1,0 +1,405 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Duplicate Invoice Detector</title>
+<meta name="description" content="Upload a CSV of invoices and flag likely duplicate payments, with a reason for every flag.">
+<style>
+:root{
+  --bg:#f7f5f0; --surface:#ffffff; --ink:#1c1b19; --muted:#6b675f; --line:#e3dfd6;
+  --accent:#2f5d50; --accent-soft:#e3eee9; --high:#a33a2b; --high-soft:#f8e4e0;
+  --med:#9a6a12; --med-soft:#f7ecd6; --low:#4d5f80; --low-soft:#e6ebf4;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#151513; --surface:#1e1e1b; --ink:#ecebe6; --muted:#a29d93; --line:#33322e;
+    --accent:#7fc0ab; --accent-soft:#1f302a; --high:#ef8a7b; --high-soft:#3a201c;
+    --med:#e0b35c; --med-soft:#352a16; --low:#9cb0d6; --low-soft:#1f2635;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#151513; --surface:#1e1e1b; --ink:#ecebe6; --muted:#a29d93; --line:#33322e;
+  --accent:#7fc0ab; --accent-soft:#1f302a; --high:#ef8a7b; --high-soft:#3a201c;
+  --med:#e0b35c; --med-soft:#352a16; --low:#9cb0d6; --low-soft:#1f2635;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--sans)}
+.wrap{max-width:980px;margin:0 auto;padding:40px 16px 64px}
+a{color:var(--accent)}
+.kicker{font:12px/1.4 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:34px;line-height:1.15;margin:8px 0 10px;letter-spacing:-.01em}
+h2{font-size:20px;margin:0 0 12px}
+.lead{color:var(--muted);max-width:680px;margin:0}
+hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.tag{font:12px var(--mono);border:1px solid var(--line);border-radius:999px;padding:2px 10px;color:var(--muted)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:20px}
+.grid2{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+@media (max-width:760px){.grid2{grid-template-columns:1fr}}
+.drop{border:1.5px dashed var(--line);border-radius:10px;padding:22px;text-align:center;cursor:pointer;transition:.15s}
+.drop:hover,.drop.on{border-color:var(--accent);background:var(--accent-soft)}
+.drop strong{display:block;margin-bottom:4px}
+.small{font-size:13px;color:var(--muted)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:14px}
+button{font:14px var(--sans);border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:8px 14px;cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+button:disabled{opacity:.45;cursor:default}
+label.f{display:block;font-size:13px;color:var(--muted);margin:10px 0 4px}
+select,input[type=number]{width:100%;font:14px var(--sans);padding:7px 8px;border:1px solid var(--line);border-radius:7px;background:var(--bg);color:var(--ink)}
+.maps{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0}
+@media (max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px}
+.stat .n{font-size:26px;font-weight:650;font-variant-numeric:tabular-nums}
+.stat .l{font-size:12px;color:var(--muted)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font:12px var(--mono);text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.inv{font-family:var(--mono);font-size:13px;white-space:nowrap}
+td .small{white-space:nowrap}
+.sev{display:inline-block;font:12px var(--mono);border-radius:999px;padding:2px 9px;white-space:nowrap}
+.sev.High{background:var(--high-soft);color:var(--high)}
+.sev.Medium{background:var(--med-soft);color:var(--med)}
+.sev.Low{background:var(--low-soft);color:var(--low)}
+ul.why{margin:0;padding-left:18px}
+ul.why li{margin:1px 0}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media (max-width:760px){.steps{grid-template-columns:1fr}}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px}
+.step .k{font:12px var(--mono);color:var(--accent)}
+.step h3{margin:4px 0 6px;font-size:16px}
+.step p{margin:0;font-size:14px;color:var(--muted)}
+code{font-family:var(--mono);font-size:13px;background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:0 4px}
+.err{color:var(--high);font-size:14px;margin-top:10px}
+footer{margin-top:40px;font-size:13px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="kicker">Entry 02 · Oct 2026 · Audit &amp; AP tool</div>
+  <h1>Duplicate Invoice Detector</h1>
+
+  <hr>
+
+  <div class="grid2">
+    <div class="panel">
+      <h2>1. Load invoices</h2>
+      <div class="drop" id="drop" tabindex="0" role="button" aria-label="Upload a CSV file">
+        <strong>Drop a CSV here or click to choose</strong>
+        <span class="small">Needs columns for vendor, invoice number, amount, and date</span>
+      </div>
+      <input type="file" id="file" accept=".csv,text/csv" hidden>
+      <div class="row">
+        <button id="sample">Try sample data</button>
+        <span class="small" id="loaded">No file loaded</span>
+      </div>
+      <div class="err" id="err" hidden></div>
+      <div id="mapping" hidden>
+        <label class="f" style="margin-top:16px">Match your columns</label>
+        <div class="maps">
+          <div><label class="f" for="mVendor">Vendor</label><select id="mVendor"></select></div>
+          <div><label class="f" for="mInv">Invoice number</label><select id="mInv"></select></div>
+          <div><label class="f" for="mAmt">Amount</label><select id="mAmt"></select></div>
+          <div><label class="f" for="mDate">Date</label><select id="mDate"></select></div>
+        </div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>2. Set the rules</h2>
+      <label class="f" for="tInv">Invoice-number similarity to flag (%)</label>
+      <input type="number" id="tInv" value="75" min="50" max="100" step="5">
+      <label class="f" for="tVen">Vendor-name similarity to treat as same vendor (%)</label>
+      <input type="number" id="tVen" value="85" min="50" max="100" step="5">
+      <label class="f" for="tDays">Different invoice numbers: flag if dated within (days)</label>
+      <input type="number" id="tDays" value="7" min="0" max="365" step="1">
+      <label class="f" for="tAmt">Amount tolerance ($)</label>
+      <input type="number" id="tAmt" value="0.01" min="0" step="0.01">
+      <div class="row"><button class="primary" id="run" disabled>Find duplicates</button></div>
+    </div>
+  </div>
+
+  <div id="results" hidden>
+    <div class="stats">
+      <div class="stat"><div class="n" id="sInv">0</div><div class="l">Invoices checked</div></div>
+      <div class="stat"><div class="n" id="sPairs">0</div><div class="l">Pairs flagged</div></div>
+      <div class="stat"><div class="n" id="sHigh">0</div><div class="l">High severity</div></div>
+      <div class="stat"><div class="n" id="sDollars">$0</div><div class="l">At risk if all paid twice</div></div>
+    </div>
+    <div class="row" style="justify-content:space-between;margin:0 0 10px">
+      <h2 style="margin:0">Flagged pairs</h2>
+      <button id="export">Download flags (CSV)</button>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Severity</th><th>Vendor</th><th>Invoice A</th><th>Invoice B</th><th class="num">Amount</th><th>Why it was flagged</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr>
+
+  <h2>How it works</h2>
+  <div class="steps">
+    <div class="step"><div class="k">Step 1</div><h3>Clean the data</h3><p>Invoice numbers lose prefixes, punctuation, spaces and leading zeros, so <code>INV-001023</code> and <code>1023</code> become the same. Vendor names drop case, punctuation and suffixes like Inc or LLC.</p></div>
+    <div class="step"><div class="k">Step 2</div><h3>Score similarity</h3><p>Invoices are grouped by amount, then compared within each group. Edit distance counts the character changes between two invoice numbers and turns it into a 0–100% score.</p></div>
+    <div class="step"><div class="k">Step 3</div><h3>Flag with a reason</h3><p><b>High:</b> numbers match after cleaning. <b>Medium:</b> numbers are similar enough to be a typo. <b>Low:</b> worth a look, such as different numbers a few days apart, or sequential numbers a month apart that are probably recurring bills.</p></div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const $ = id => document.getElementById(id);
+  let rows = [], headers = [], lastFlags = [];
+
+  // ---------- CSV parsing (handles quoted fields) ----------
+  function parseCSV(text){
+    const out = []; let row = [], cur = "", q = false;
+    text = text.replace(/^﻿/, "");
+    for (let i = 0; i < text.length; i++){
+      const c = text[i];
+      if (q){
+        if (c === '"' && text[i+1] === '"'){ cur += '"'; i++; }
+        else if (c === '"'){ q = false; }
+        else cur += c;
+      } else if (c === '"') q = true;
+      else if (c === ","){ row.push(cur); cur = ""; }
+      else if (c === "\n" || c === "\r"){
+        if (c === "\r" && text[i+1] === "\n") i++;
+        row.push(cur); cur = "";
+        if (row.some(v => v.trim() !== "")) out.push(row);
+        row = [];
+      } else cur += c;
+    }
+    row.push(cur); if (row.some(v => v.trim() !== "")) out.push(row);
+    return out;
+  }
+
+  // ---------- normalization ----------
+  function normInvoice(s){
+    let x = String(s || "").toLowerCase().trim();
+    x = x.replace(/^(invoice|inv|no|num|number|#)[\s.:#-]*/g, "");
+    x = x.replace(/[^a-z0-9]/g, "");
+    x = x.replace(/^(inv|invoice)/, "");
+    x = x.replace(/^0+(?=\d)/, "");
+    x = x.replace(/([a-z])0+(?=\d)/g, "$1");   // SIT-0098 -> sit98
+    return x;
+  }
+  function normVendor(s){
+    return String(s || "").toLowerCase()
+      .replace(/&/g, " and ")
+      .replace(/[^a-z0-9 ]/g, " ")
+      .replace(/\b(inc|incorporated|llc|ltd|limited|corp|corporation|co|company|the)\b/g, " ")
+      .replace(/\s+/g, " ").trim();
+  }
+  function parseAmount(s){
+    const neg = /\(.*\)/.test(String(s));
+    const v = parseFloat(String(s || "").replace(/[^0-9.\-]/g, ""));
+    return isNaN(v) ? null : (neg ? -Math.abs(v) : v);
+  }
+  function parseDate(s){
+    const t = String(s || "").trim(); if (!t) return null;
+    let m = t.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (m) return Date.UTC(+m[1], +m[2]-1, +m[3]);
+    m = t.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+    if (m){ let y = +m[3]; if (y < 100) y += 2000; return Date.UTC(y, +m[1]-1, +m[2]); }
+    const d = Date.parse(t); return isNaN(d) ? null : d;
+  }
+
+  // ---------- similarity ----------
+  function lev(a, b){
+    if (a === b) return 0;
+    const m = a.length, n = b.length; if (!m) return n; if (!n) return m;
+    let prev = Array.from({length: n+1}, (_, j) => j), cur = new Array(n+1);
+    for (let i = 1; i <= m; i++){
+      cur[0] = i;
+      for (let j = 1; j <= n; j++){
+        const cost = a[i-1] === b[j-1] ? 0 : 1;
+        cur[j] = Math.min(prev[j] + 1, cur[j-1] + 1, prev[j-1] + cost);
+        // adjacent swap counts as one edit (e.g. 1023 vs 1032)
+        if (i > 1 && j > 1 && a[i-1] === b[j-2] && a[i-2] === b[j-1]) cur[j] = Math.min(cur[j], prev[j-1]);
+      }
+      [prev, cur] = [cur, prev];
+    }
+    return prev[n];
+  }
+  function sim(a, b){
+    if (!a && !b) return 100;
+    const d = lev(a, b); return Math.round((1 - d / Math.max(a.length, b.length)) * 100);
+  }
+
+  // ---------- column detection ----------
+  function guess(cands){
+    const h = headers.map(x => x.toLowerCase());
+    for (const c of cands){ const i = h.findIndex(x => x.includes(c)); if (i >= 0) return i; }
+    return -1;
+  }
+  function fillSelect(id, idx){
+    const s = $(id); s.innerHTML = "";
+    headers.forEach((h, i) => { const o = document.createElement("option"); o.value = i; o.textContent = h || ("Column " + (i+1)); s.appendChild(o); });
+    s.value = idx >= 0 ? idx : 0;
+  }
+
+  function load(text, name){
+    $("err").hidden = true;
+    const data = parseCSV(text);
+    if (data.length < 3){ showErr("That file needs a header row and at least two invoices."); return; }
+    headers = data[0].map(h => h.trim());
+    rows = data.slice(1);
+    fillSelect("mVendor", guess(["vendor","supplier","payee","name"]));
+    fillSelect("mInv", guess(["invoice","inv","number","ref"]));
+    fillSelect("mAmt", guess(["amount","total","amt","value"]));
+    fillSelect("mDate", guess(["date","dt"]));
+    $("mapping").hidden = false;
+    $("loaded").textContent = `${name}: ${rows.length} invoices`;
+    $("run").disabled = false;
+    detect();
+  }
+  function showErr(m){ $("err").textContent = m; $("err").hidden = false; }
+
+  // ---------- detection ----------
+  function detect(){
+    const iV = +$("mVendor").value, iI = +$("mInv").value, iA = +$("mAmt").value, iD = +$("mDate").value;
+    const tInv = +$("tInv").value, tVen = +$("tVen").value, tDays = +$("tDays").value, tAmt = Math.max(0, +$("tAmt").value);
+    const recs = rows.map((r, k) => ({
+      k, vendor: (r[iV] || "").trim(), inv: (r[iI] || "").trim(), amtRaw: r[iA],
+      amount: parseAmount(r[iA]), date: parseDate(r[iD]), dateRaw: (r[iD] || "").trim(),
+      nv: normVendor(r[iV]), ni: normInvoice(r[iI])
+    })).filter(r => r.amount !== null && r.amount !== 0);
+
+    // blocking: bucket by amount (in cents) so only plausible pairs are compared
+    const buckets = new Map(), step = Math.max(1, Math.round(tAmt * 100));
+    recs.forEach(r => {
+      const key = Math.round(Math.abs(r.amount) * 100 / step);
+      if (!buckets.has(key)) buckets.set(key, []);
+      buckets.get(key).push(r);
+    });
+    const seen = new Set(), flags = [];
+    const keys = [...buckets.keys()];
+    keys.forEach(key => {
+      const group = [].concat(buckets.get(key) || [], buckets.get(key+1) || []);
+      for (let a = 0; a < group.length; a++) for (let b = a + 1; b < group.length; b++){
+        const A = group[a], B = group[b];
+        const id = Math.min(A.k, B.k) + ":" + Math.max(A.k, B.k);
+        if (seen.has(id)) continue; seen.add(id);
+        if (Math.abs(Math.abs(A.amount) - Math.abs(B.amount)) > tAmt + 1e-9) continue;
+        const vs = A.nv === B.nv ? 100 : sim(A.nv, B.nv);
+        if (vs < tVen) continue;
+        const is = sim(A.ni, B.ni);
+        const days = (A.date !== null && B.date !== null) ? Math.round(Math.abs(A.date - B.date) / 864e5) : null;
+        const why = [];
+        why.push(vs === 100 ? `Same vendor after cleaning (${A.nv})` : `Vendor names ${vs}% similar ("${A.vendor}" vs "${B.vendor}")`);
+        why.push(A.amount === B.amount ? `Same amount (${money(A.amount)})` : `Amounts within ${money(tAmt)}`);
+        let sev = null;
+        if (A.ni && A.ni === B.ni){
+          sev = "High";
+          why.push(A.inv === B.inv ? `Identical invoice number (${A.inv})` : `Invoice numbers match after cleaning ("${A.inv}" vs "${B.inv}")`);
+        } else if (is >= tInv){
+          const d = lev(A.ni, B.ni);
+          const ma = A.ni.match(/^(.*?)(\d+)$/), mb = B.ni.match(/^(.*?)(\d+)$/);
+          const sequential = ma && mb && ma[1] === mb[1] && Math.abs(+ma[2] - +mb[2]) <= 3;
+          if (sequential && days !== null && days >= 25){
+            sev = "Low";
+            why.push(`Sequential invoice numbers ("${A.inv}" vs "${B.inv}") dated ${days} days apart: likely recurring billing, confirm before treating as a duplicate`);
+          } else {
+            sev = "Medium";
+            why.push(`Invoice numbers ${is}% similar, ${d} character${d === 1 ? "" : "s"} apart ("${A.inv}" vs "${B.inv}"), possible typo`);
+          }
+        } else if (days !== null && days <= tDays){
+          sev = "Low";
+          why.push(`Different invoice numbers ("${A.inv}" vs "${B.inv}") but dated ${days} day${days === 1 ? "" : "s"} apart`);
+        }
+        if (!sev) continue;
+        if (days !== null && !why.some(w => w.includes("apart:") || w.includes("but dated"))) why.push(`Dated ${days} day${days === 1 ? "" : "s"} apart`);
+        flags.push({sev, A, B, vs, is, days, why});
+      }
+    });
+    const order = {High:0, Medium:1, Low:2};
+    flags.sort((x, y) => order[x.sev] - order[y.sev] || Math.abs(y.A.amount) - Math.abs(x.A.amount));
+    lastFlags = flags;
+    render(recs.length, flags);
+  }
+
+  function money(v){ return (v < 0 ? "-$" : "$") + Math.abs(v).toLocaleString("en-US", {minimumFractionDigits:2, maximumFractionDigits:2}); }
+  function esc(s){ return String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+
+  function render(n, flags){
+    $("results").hidden = false;
+    $("sInv").textContent = n.toLocaleString();
+    $("sPairs").textContent = flags.length;
+    $("sHigh").textContent = flags.filter(f => f.sev === "High").length;
+    $("sDollars").textContent = money(flags.reduce((s, f) => s + Math.abs(f.A.amount), 0));
+    const tb = $("tbody");
+    if (!flags.length){ tb.innerHTML = `<tr><td colspan="6" class="empty">No likely duplicates found with these rules.</td></tr>`; return; }
+    tb.innerHTML = flags.map(f => `<tr>
+      <td><span class="sev ${f.sev}">${f.sev}</span></td>
+      <td>${esc(f.A.vendor)}</td>
+      <td><span class="inv">${esc(f.A.inv)}</span><div class="small">${esc(f.A.dateRaw)}</div></td>
+      <td><span class="inv">${esc(f.B.inv)}</span><div class="small">${esc(f.B.dateRaw)}</div></td>
+      <td class="num">${money(f.A.amount)}</td>
+      <td><ul class="why">${f.why.map(w => `<li>${esc(w)}</li>`).join("")}</ul></td>
+    </tr>`).join("");
+  }
+
+  function exportCSV(){
+    const q = v => `"${String(v).replace(/"/g, '""')}"`;
+    const lines = [["Severity","Vendor A","Invoice A","Date A","Vendor B","Invoice B","Date B","Amount","Reasons"].map(q).join(",")];
+    lastFlags.forEach(f => lines.push([f.sev, f.A.vendor, f.A.inv, f.A.dateRaw, f.B.vendor, f.B.inv, f.B.dateRaw, f.A.amount.toFixed(2), f.why.join("; ")].map(q).join(",")));
+    const blob = new Blob([lines.join("\n")], {type: "text/csv"});
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "duplicate_invoice_flags.csv"; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  // ---------- sample data (fictional) ----------
+  const SAMPLE = `Vendor,Invoice Number,Invoice Date,Amount
+Acme Office Supply Inc.,INV-1023,2026-03-02,"4,250.00"
+ACME OFFICE SUPPLY,1023,2026-03-08,4250.00
+Harbor Courier LLC,HC-55781,2026-03-03,312.40
+Harbor Courier,HC-55871,2026-03-04,312.40
+Brightline Legal Research,BLR-2026-0417,2026-03-05,1890.00
+Northside Catering Co.,7781,2026-03-05,640.00
+Northside Catering,7781,2026-03-05,640.00
+Metro Records Storage,MRS-90012,2026-03-06,2750.00
+Metro Records Storage,MRS-90031,2026-03-09,2750.00
+Pinnacle Court Reporting,PCR-4410,2026-03-07,975.50
+Pinnacle Court Reporting,PCR-4411,2026-04-21,975.50
+Summit IT Services,SIT-0098,2026-03-10,5400.00
+Summit IT Services Inc,SIT-98,2026-03-12,5400.00
+Clearview Printing,CP-3312,2026-03-11,228.75
+Atlas Expert Witness Group,AEW-118,2026-03-11,12500.00
+Bayside Office Cleaning,BOC-2201,2026-03-13,880.00
+Lakeshore Translation,LT-6630,2026-03-14,1440.00
+Lakeshore Translations,LT-6630,2026-03-28,1440.00
+Riverbend Process Servers,RPS-1550,2026-03-15,195.00
+Granite Data Backup,GDB-7744,2026-03-16,699.00
+Granite Data Backup,GDB-7745,2026-04-16,699.00
+Keystone Mail Services,KMS-0402,2026-03-17,155.20
+Union Square Parking,USP-221,2026-03-18,420.00
+Clearview Printing,CP-3321,2026-03-19,228.75`;
+
+  // ---------- wiring ----------
+  const drop = $("drop"), file = $("file");
+  drop.addEventListener("click", () => file.click());
+  drop.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " "){ e.preventDefault(); file.click(); } });
+  ["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("on"); }));
+  ["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("on"); }));
+  drop.addEventListener("drop", e => { const f = e.dataTransfer.files[0]; if (f) readFile(f); });
+  file.addEventListener("change", () => { if (file.files[0]) readFile(file.files[0]); });
+  function readFile(f){ const r = new FileReader(); r.onload = () => load(r.result, f.name); r.readAsText(f); }
+  $("sample").addEventListener("click", () => load(SAMPLE, "Sample data"));
+  $("run").addEventListener("click", detect);
+  ["mVendor","mInv","mAmt","mDate","tInv","tVen","tDays","tAmt"].forEach(id => $(id).addEventListener("change", () => { if (rows.length) detect(); }));
+  $("export").addEventListener("click", exportCSV);
+})();
+</script>
+</body>
+</html>
